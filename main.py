@@ -1,8 +1,12 @@
-from urllib.error import HTTPError
-import requests
-# import urllib3
+import os
 
 from pathlib import Path
+
+import requests
+import urllib3
+
+from bs4 import BeautifulSoup
+from pathvalidate import sanitize_filename
 
 
 def check_for_redirect(source_url, response):
@@ -12,34 +16,47 @@ def check_for_redirect(source_url, response):
         raise requests.HTTPError
 
 
-def fetch_books(source_url, book_id):
-    payload = {'id': book_id}
-    response = requests.get(source_url, params=payload)
+def fetch_book(url):
+    response = requests.get(url)
     response.raise_for_status()
-    check_for_redirect(source_url, response)
+    check_for_redirect(url, response)
     return response
 
 
-def download_books(source_url, book_dir, count):
-    Path(book_dir).mkdir(parents=True, exist_ok=True)
-    for book_id in range(1, count+1):
-        try:
-            response = fetch_books(source_url, book_id)
-        except requests.HTTPError:
-            continue
+def get_title_and_author(book_title_url):
+    response = fetch_book(book_title_url)
+    soup = BeautifulSoup(response.text, 'lxml')
+    title_tag = soup.find('div', id='content').find('h1')
+    title, author = title_tag.text.split('::')
+    return title.strip(), author.strip()
 
-        filename = f'id{book_id}.txt'
-        with open(f'{book_dir}/{filename}', 'w') as file:
-            file.write(response.text)
+
+def compose_filename(book_id, book_title_url):
+    title, author = get_title_and_author(book_title_url)
+    return f'{book_id}. {title}.txt'
+
+
+def download_txt(url, filename, folder='books/'):
+    Path(folder).mkdir(parents=True, exist_ok=True)
+    filename = sanitize_filename(filename)
+    response = fetch_book(url)
+    filepath = os.path.join(folder, filename)
+    with open(filepath, 'w') as file:
+        file.write(response.text)
+    return filepath
 
 
 def main():
-    # urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
-    books_source_url = 'https://tululu.org/txt.php'
-    download_books(books_source_url, 'books', 10)
-    
-    
-    
+    urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
+    count = 10
+    for book_id in range(1, count+1):
+        book_title_url = f'https://tululu.org/b{book_id}/'
+        text_url = f'https://tululu.org/txt.php?id={book_id}'
+        try:
+            filename = compose_filename(book_id, book_title_url)
+            download_txt(text_url, filename)
+        except requests.HTTPError:
+            continue
 
 
 if __name__ == '__main__':

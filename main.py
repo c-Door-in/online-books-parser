@@ -1,8 +1,10 @@
 import requests
 import urllib3
+from bs4 import BeautifulSoup
 
 from download_image import download_image
 from download_txt import download_txt, compose_text_filename
+from download_comments import download_comments
 
 
 def check_for_redirect(source_url, response):
@@ -25,10 +27,12 @@ def download_book(book_id):
 
     title_url = f'https://tululu.org/b{book_id}/'
     book_title = fetch_book(title_url)
+    title_page_soup = BeautifulSoup(book_title, 'lxml')
 
     text_filename = compose_text_filename(book_title, book_id)
-    download_txt(book_text, text_filename)
-    download_image(title_url, book_title)
+    # download_txt(book_text, text_filename)
+    # download_image(title_url, book_title)
+    download_comments(title_page_soup)
 
 
 def main():

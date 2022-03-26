@@ -1,9 +1,3 @@
-import os
-from pathlib import Path
-
-from bs4 import BeautifulSoup
-from pathvalidate import sanitize_filename
-
 from download_txt import get_title_and_author
 
 

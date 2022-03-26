@@ -3,7 +3,7 @@ import urllib3
 from bs4 import BeautifulSoup
 
 from download_image import download_image
-from download_txt import download_txt, compose_text_filename
+from download_txt import download_txt, compose_text_filename, get_title_and_author
 from download_comments import download_comments
 
 
@@ -21,6 +21,11 @@ def fetch_book(url):
     return response.text
 
 
+def parse_genres(soup):
+    genre_tag = soup.find('span', class_='d_book').find('a')
+    return genre_tag.text
+
+
 def download_book(book_id):
     text_url = f'https://tululu.org/txt.php?id={book_id}'
     book_text = fetch_book(text_url)
@@ -30,9 +35,13 @@ def download_book(book_id):
     title_page_soup = BeautifulSoup(book_title, 'lxml')
 
     text_filename = compose_text_filename(book_title, book_id)
+    title, author = get_title_and_author(title_page_soup)
     # download_txt(book_text, text_filename)
     # download_image(title_url, book_title)
-    download_comments(title_page_soup)
+    # download_comments(title_page_soup)
+    print('Заголовок:', title)
+    print(parse_genres(title_page_soup))
+
 
 
 def main():

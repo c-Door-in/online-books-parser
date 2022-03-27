@@ -1,9 +1,26 @@
+import argparse
+
 import requests
 import urllib3
 from bs4 import BeautifulSoup
 
 from download_image import download_image
 from download_txt import download_txt, compose_text_filename, get_title_and_author
+
+
+def create_arg_parser():
+    parser = argparse.ArgumentParser(
+        prog='TULULU PARSER',
+        description='Parser for online-library tululu.org',
+    )
+    parser.add_argument(
+        'range',
+        nargs=2,
+        default=[1, 10],
+        help='Set ID range of parsing books from start_id to end_id',
+        type=int,
+    )
+    return parser
 
 
 def check_for_redirect(source_url, response):
@@ -63,7 +80,6 @@ def parse_book_page(content):
 
 
 def download_book(book_id):
-
     title_url = f'https://tululu.org/b{book_id}/'
     book_page = fetch_book(title_url)
     # download_txt(book_text, text_filename)
@@ -75,8 +91,12 @@ def download_book(book_id):
 
 def main():
     urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
-    count = 10
-    for book_id in range(1, count+1):
+    parser = create_arg_parser()
+    args = parser.parse_args()
+    start_id, end_id = args.range
+    if start_id > end_id:
+        start_id, end_id = end_id, start_id
+    for book_id in range(start_id, end_id+1):
         try:
             download_book(book_id)
         except requests.HTTPError:

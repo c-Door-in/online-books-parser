@@ -4,7 +4,6 @@ from bs4 import BeautifulSoup
 
 from download_image import download_image
 from download_txt import download_txt, compose_text_filename, get_title_and_author
-from download_comments import download_comments
 
 
 def check_for_redirect(source_url, response):
@@ -21,26 +20,56 @@ def fetch_book(url):
     return response.text
 
 
+def parse_title_and_author(soup):
+    title_tag = soup.find('div', id='content').find('h1')
+    title, author = title_tag.text.split('::')
+    return title.strip(), author.strip()
+
+
+def parse_image_url(soup):
+    image_tag = soup.find('div', class_='bookimage').find('img')
+    return image_tag['src']
+
+
+def parse_txt_url(soup):
+    book_menu_links = soup.find('table', class_='d_book').find_all('a')
+    for link in book_menu_links:
+        if 'скачать txt' in link.text:
+            return link['href']
+
+
 def parse_genres(soup):
-    genre_tag = soup.find('span', class_='d_book').find('a')
-    return genre_tag.text
+    for tag in soup.find_all('span', class_='d_book'):
+        if 'Жанр книги' in tag.text:
+            return [genre_tag.text for genre_tag in tag.find_all('a')]
+
+
+def parse_comments(soup):
+    comments_tags = soup.find_all('div', class_='texts')
+    return [comment.find('span').text for comment in comments_tags]
+
+
+def parse_book_page(content):
+    soup = BeautifulSoup(content, 'lxml')
+    title, author = parse_title_and_author(soup)
+    return {
+        'title': title,
+        'author': author,
+        'image_url': parse_image_url(soup),
+        'txt_url': parse_txt_url(soup),
+        'genres': parse_genres(soup),
+        'comments': parse_comments(soup),
+    }
 
 
 def download_book(book_id):
-    text_url = f'https://tululu.org/txt.php?id={book_id}'
-    book_text = fetch_book(text_url)
 
     title_url = f'https://tululu.org/b{book_id}/'
-    book_title = fetch_book(title_url)
-    title_page_soup = BeautifulSoup(book_title, 'lxml')
-
-    text_filename = compose_text_filename(book_title, book_id)
-    title, author = get_title_and_author(title_page_soup)
+    book_page = fetch_book(title_url)
     # download_txt(book_text, text_filename)
     # download_image(title_url, book_title)
     # download_comments(title_page_soup)
-    print('Заголовок:', title)
-    print(parse_genres(title_page_soup))
+    print(parse_book_page(book_page))
 
 
 

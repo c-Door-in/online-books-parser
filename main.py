@@ -14,10 +14,13 @@ def create_arg_parser():
         description='Parser for online-library tululu.org',
     )
     parser.add_argument(
-        'range',
-        nargs=2,
-        default=[1, 10],
-        help='Set ID range of parsing books from start_id to end_id',
+        'start_id',
+        help='Set start book ID for parsing range',
+        type=int,
+    )
+    parser.add_argument(
+        'end_id',
+        help='Set end book ID for parsing range',
         type=int,
     )
     return parser
@@ -93,7 +96,8 @@ def main():
     urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
     parser = create_arg_parser()
     args = parser.parse_args()
-    start_id, end_id = args.range
+    start_id = args.start_id
+    end_id = args.end_id
     if start_id > end_id:
         start_id, end_id = end_id, start_id
     for book_id in range(start_id, end_id+1):

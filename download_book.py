@@ -5,19 +5,12 @@ from download_txt import download_txt
 from parse_book_page import parse_book_page
 
 
-def check_for_redirect(source_url, res_history, res_url):
-    if not res_history:
-        return
-    if source_url not in res_url:
-        raise requests.HTTPError
-
-
 def download_book(book_id):
     title_url = f'https://tululu.org/b{book_id}/'
     response = requests.get(title_url)
     response.raise_for_status()
-    check_for_redirect(title_url, response.history, response.url)
-
+    if response.history:
+        raise requests.HTTPError
     parsed_page = parse_book_page(response.text)
     title = parsed_page['title']
     txt_url = parsed_page['txt_url']

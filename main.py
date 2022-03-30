@@ -28,19 +28,14 @@ def create_arg_parser():
     return parser
 
 
-def get_range(args):
-    start_id = args.start_id
-    end_id = args.end_id
-    if start_id > end_id:
-        start_id, end_id = end_id, start_id
-    return start_id, end_id
-
-
 def main():
     urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
     parser = create_arg_parser()
     args = parser.parse_args()
-    start_id, end_id = get_range(args)
+    
+    start_id, end_id = args.start_id, args.end_id
+    if start_id > end_id:
+        start_id, end_id = end_id, start_id
     print(f'parsing from {start_id} to {end_id}')
     for book_id in range(start_id, end_id+1):
         try:

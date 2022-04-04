@@ -83,9 +83,13 @@ def main():
     parser = create_arg_parser()
     args = parser.parse_args()
 
-    start_id, end_id = args.start_id, args.end_id
-    if start_id > end_id:
-        start_id, end_id = end_id, start_id
+    try:
+        start_id, end_id = args.start_id, args.end_id
+        if start_id > end_id:
+            raise Exception('Start ID must be less than end ID')
+    except Exception:
+        raise
+
     print(f'parsing from {start_id} to {end_id}')
     for book_id in range(start_id, end_id+1):
         try:

@@ -1,37 +1,11 @@
-import argparse
-import json
 import os
 from pathlib import Path
 from urllib.parse import urljoin, urlsplit, unquote
 
 import requests
-import urllib3
 from pathvalidate import sanitize_filename
 
 from parse_book_page import parse_book_page
-from parse_tululu_category import parse_tululu_category
-
-
-def create_arg_parser():
-    parser = argparse.ArgumentParser(
-        prog='TULULU PARSER',
-        description='Parser for online-library tululu.org',
-    )
-    parser.add_argument(
-        '-from',
-        '--start_id',
-        default=1,
-        help='Set start book ID for parsing range',
-        type=int,
-    )
-    parser.add_argument(
-        '-to',
-        '--end_id',
-        default=10,
-        help='Set end book ID for parsing range',
-        type=int,
-    )
-    return parser
 
 
 def get_txt_filepath(folder, title, id):
@@ -82,34 +56,13 @@ def download_book(book_id, title_page_url):
     return parsed_page
 
 
-def main():
-    urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
-    parser = create_arg_parser()
-    args = parser.parse_args()
-
-    try:
-        start_id, end_id = args.start_id, args.end_id
-        if start_id > end_id:
-            raise Exception('Start ID must be less than end ID')
-    except Exception:
-        raise
-
-    category_url = 'https://tululu.org/l55/'
-    title_page_urls = parse_tululu_category(category_url, 1)
-
-    print(f'parsing from {start_id} to {end_id}')
+def download_books(title_page_urls):
     books_summary = []
-    for book_id, page_url in enumerate(title_page_urls[start_id:end_id+1], 1):
+    for book_id, page_url in enumerate(title_page_urls, 1):
         try:
             parsed_page = download_book(book_id, page_url)
             if parsed_page:
                 books_summary.append(parsed_page)
         except requests.HTTPError:
             continue
-    
-    with open('books.json', 'w', encoding='utf-8') as json_file:
-        json.dump(books_summary, json_file, ensure_ascii=False)
-
-
-if __name__ == '__main__':
-    main()
+    return books_summary

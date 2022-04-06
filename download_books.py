@@ -51,8 +51,8 @@ def download_book(book_id, title_page_url):
     image_url = parsed_page['image_url']
     if not txt_url:
         return
-    download_txt(title_page_url, txt_url, book_id, title)
-    download_image(title_page_url, image_url)
+    # download_txt(title_page_url, txt_url, book_id, title)
+    # download_image(title_page_url, image_url)
     return parsed_page
 
 

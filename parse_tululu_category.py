@@ -16,16 +16,15 @@ def create_arg_parser():
     )
     parser.add_argument(
         '-from',
-        '--start_id',
+        '--start_page',
         default=1,
-        help='Set start book ID for parsing range',
+        help='Set start page of the category list',
         type=int,
     )
     parser.add_argument(
         '-to',
-        '--end_id',
-        default=1,
-        help='Set end book ID for parsing range',
+        '--end_page',
+        help='Set end page of the category list',
         type=int,
     )
     return parser
@@ -43,9 +42,10 @@ def parse_book_urls(soup):
     return [book_url.select_one('[href^="/b"]')['href'] for book_url in card_tags]
 
 
-def parse_tululu_category(category_url, pages_count=None, start_page_id=1):
+def parse_tululu_category(category_url, start_page_id, end_page_id):
     book_urls = list()
     page_id = start_page_id
+    
     while True:
         print(page_id)
         list_page_url = f'{category_url}{page_id}/'
@@ -55,11 +55,11 @@ def parse_tululu_category(category_url, pages_count=None, start_page_id=1):
         for book_url in parse_book_urls(soup):
             book_urls.extend([urljoin(category_url, book_url)])
         page_id += 1
+        if end_page_id:
+            if page_id > end_page_id:
+                break
         if is_final_page(soup, page_id):
             break
-        if pages_count:
-            if page_id > pages_count:
-                break
         
     return book_urls
 
@@ -68,20 +68,19 @@ def main():
     urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
     parser = create_arg_parser()
     args = parser.parse_args()
-
-    try:
-        start_id, end_id = args.start_id, args.end_id
-        if start_id > end_id:
-            raise Exception('Start ID must be less than end ID')
-    except Exception:
-        raise
+    
+    start_page_id, end_page_id = args.start_page, args.end_page
+    if end_page_id:
+        try:
+            if start_page_id > end_page_id:
+                raise Exception('Start page number must be less than the end one')
+        except Exception:
+            raise
     
     category_url = 'https://tululu.org/l55/'
-    pages_count = 1
-    for id, book_url in enumerate(parse_tululu_category(category_url, pages_count)):
-        print(id, book_url)
 
-    title_page_urls = parse_tululu_category(category_url, 1)
+    title_page_urls = parse_tululu_category(category_url, start_page_id, end_page_id)
+    print(args)
     books_summary = download_books(title_page_urls)
     
     with open('books.json', 'w', encoding='utf-8') as json_file:

@@ -1,4 +1,5 @@
 import argparse
+import json
 import os
 from pathlib import Path
 from urllib.parse import urljoin, urlsplit, unquote
@@ -8,6 +9,7 @@ import urllib3
 from pathvalidate import sanitize_filename
 
 from parse_book_page import parse_book_page
+from parse_tululu_category import parse_tululu_category
 
 
 def create_arg_parser():
@@ -44,7 +46,7 @@ def download_txt(title_url, txt_url, id, title, folder='books/'):
 
     Path(folder).mkdir(parents=True, exist_ok=True)
     filepath = get_txt_filepath(folder, title, id)
-    with open(filepath, 'w') as file:
+    with open(filepath, 'w', encoding='utf-8') as file:
         file.write(response.text)
     return filepath
 
@@ -62,20 +64,21 @@ def download_image(title_url, image_url, folder='images/'):
     return filepath
 
 
-def download_book(book_id):
-    title_url = f'https://tululu.org/b{book_id}/'
-    response = requests.get(title_url)
+def download_book(book_id, title_page_url):
+    response = requests.get(title_page_url)
     response.raise_for_status()
     if response.history:
         raise requests.HTTPError
     parsed_page = parse_book_page(response.text)
+
     title = parsed_page['title']
     txt_url = parsed_page['txt_url']
     image_url = parsed_page['image_url']
     if not txt_url:
         return
-    download_txt(title_url, txt_url, book_id, title)
-    download_image(title_url, image_url)
+    download_txt(title_page_url, txt_url, book_id, title)
+    download_image(title_page_url, image_url)
+    return parsed_page
 
 
 def main():
@@ -90,12 +93,22 @@ def main():
     except Exception:
         raise
 
+    category_url = 'https://tululu.org/l55/'
+    categories_pages_count = 4
+    title_page_urls = parse_tululu_category(category_url, categories_pages_count)
+
     print(f'parsing from {start_id} to {end_id}')
-    for book_id in range(start_id, end_id+1):
+    books_summary = []
+    for book_id, page_url in enumerate(title_page_urls[start_id:end_id+1], 1):
         try:
-            download_book(book_id)
+            parsed_page = download_book(book_id, page_url)
+            if parsed_page:
+                books_summary.append(parsed_page)
         except requests.HTTPError:
             continue
+    
+    with open('books.json', 'w', encoding='utf-8') as json_file:
+        json.dump(books_summary, json_file, ensure_ascii=False)
 
 
 if __name__ == '__main__':

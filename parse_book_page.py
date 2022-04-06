@@ -2,32 +2,31 @@ from bs4 import BeautifulSoup
 
 
 def parse_title_and_author(soup):
-    title_tag = soup.find('div', id='content').find('h1')
-    title, author = title_tag.text.split('::')
+    title_selector = '#content h1'
+    title, author = soup.select_one(title_selector).text.split('::')
     return title.strip(), author.strip()
 
 
 def parse_image_url(soup):
-    image_tag = soup.find('div', class_='bookimage').find('img')
-    return image_tag['src']
+    image_selector = '.bookimage img'
+    return soup.select_one(image_selector)['src']
 
 
 def parse_txt_url(soup):
-    book_menu_links = soup.find('table', class_='d_book').find_all('a')
-    for link in book_menu_links:
-        if 'скачать txt' in link.text:
-            return link['href']
+    link_selector = '.d_book a'
+    for link_tag in soup.select(link_selector):
+        if 'скачать txt' in link_tag.text:
+            return link_tag['href']
 
 
 def parse_genres(soup):
-    for tag in soup.find_all('span', class_='d_book'):
-        if 'Жанр книги' in tag.text:
-            return [genre_tag.text for genre_tag in tag.find_all('a')]
+    genres_selector = 'span.d_book a'
+    return [genre_tag.text for genre_tag in soup.select(genres_selector)]
 
 
 def parse_comments(soup):
-    comments_tags = soup.find_all('div', class_='texts')
-    return [comment.find('span').text for comment in comments_tags]
+    comments_selector = '.texts span'
+    return [comment_tag.text for comment_tag in soup.select(comments_selector)]
 
 
 def parse_book_page(content):

@@ -5,18 +5,18 @@ from bs4 import BeautifulSoup
 
 
 def is_final_page(soup, page_id):
+    selector = '#content .npage'
     return str(page_id) not in [
-        npage.text for npage in soup.find('div', id='content') \
-                                    .find_all('a', class_='npage')
+        npage.text for npage in soup.select(selector)
     ]
 
 
-def parse_books_url(soup):
-    book_cards = soup.find_all('table', class_='d_book')
-    return [card.find('a')['href'] for card in book_cards]
+def parse_book_urls(soup):
+    card_tags = soup.select('.d_book')
+    return [book_url.select_one('[href^="/b"]')['href'] for book_url in card_tags]
 
 
-def parse_tululu_category(category_url, pages_count, start_page_id=1):
+def parse_tululu_category(category_url, pages_count=None, start_page_id=1):
     book_urls = list()
     page_id = start_page_id
     while True:
@@ -25,11 +25,14 @@ def parse_tululu_category(category_url, pages_count, start_page_id=1):
         response = requests.get(list_page_url)
         response.raise_for_status()
         soup = BeautifulSoup(response.text, 'lxml')
-        for book_url in parse_books_url(soup):
+        for book_url in parse_book_urls(soup):
             book_urls.extend([urljoin(category_url, book_url)])
         page_id += 1
-        if is_final_page(soup, page_id) or page_id > pages_count:
+        if is_final_page(soup, page_id):
             break
+        if pages_count:
+            if page_id > pages_count:
+                break
         
     return book_urls
 

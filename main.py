@@ -69,6 +69,7 @@ def download_book(book_id, title_page_url):
     response.raise_for_status()
     if response.history:
         raise requests.HTTPError
+    print(book_id, title_page_url)
     parsed_page = parse_book_page(response.text)
 
     title = parsed_page['title']
@@ -94,8 +95,7 @@ def main():
         raise
 
     category_url = 'https://tululu.org/l55/'
-    categories_pages_count = 4
-    title_page_urls = parse_tululu_category(category_url, categories_pages_count)
+    title_page_urls = parse_tululu_category(category_url, 1)
 
     print(f'parsing from {start_id} to {end_id}')
     books_summary = []

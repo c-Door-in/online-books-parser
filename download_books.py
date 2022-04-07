@@ -1,3 +1,4 @@
+import logging
 import os
 from pathlib import Path
 from urllib.parse import urljoin, urlsplit, unquote
@@ -8,6 +9,8 @@ from pathvalidate import sanitize_filename
 from parse_book_page import parse_book_page
 
 
+module_logger = logging.getLogger('log.download_books')
+
 def get_txt_filepath(folder, title, id):
     filename = sanitize_filename(f'{id}. {title}.txt')
     return os.path.join(folder, filename)
@@ -15,6 +18,7 @@ def get_txt_filepath(folder, title, id):
 
 def download_txt(title_url, txt_url, id, title, folder='books/'):
     url = urljoin(title_url, txt_url)
+    module_logger.debug(url)
     response = requests.get(url)
     response.raise_for_status()
 
@@ -27,6 +31,7 @@ def download_txt(title_url, txt_url, id, title, folder='books/'):
 
 def download_image(title_url, image_url, folder='images/'):
     url = urljoin(title_url, image_url)
+    module_logger.debug(url)
     response = requests.get(url)
     response.raise_for_status()
 
@@ -43,7 +48,7 @@ def download_book(book_id, title_page_url):
     response.raise_for_status()
     if response.history:
         raise requests.HTTPError
-    print(book_id, title_page_url)
+    module_logger.info(f'{book_id} {title_page_url}')
     parsed_page = parse_book_page(response.text)
 
     title = parsed_page['title']
@@ -51,8 +56,8 @@ def download_book(book_id, title_page_url):
     image_url = parsed_page['image_url']
     if not txt_url:
         return
-    # download_txt(title_page_url, txt_url, book_id, title)
-    # download_image(title_page_url, image_url)
+    download_txt(title_page_url, txt_url, book_id, title)
+    download_image(title_page_url, image_url)
     return parsed_page
 
 

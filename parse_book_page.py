@@ -1,5 +1,9 @@
+import logging
+
 from bs4 import BeautifulSoup
 
+
+module_logger = logging.getLogger('log.parse_book_page')
 
 def parse_title_and_author(soup):
     title_selector = '#content h1'

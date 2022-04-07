@@ -1,4 +1,5 @@
 import argparse
+import logging
 import json
 from urllib.parse import urljoin
 
@@ -7,6 +8,26 @@ import urllib3
 from bs4 import BeautifulSoup
 
 from download_books import download_books
+
+
+logger = logging.getLogger('log')
+logger.setLevel(logging.DEBUG)
+
+fh = logging.FileHandler('spam.log')
+fh.setLevel(logging.DEBUG)
+
+ch = logging.StreamHandler()
+ch.setLevel(logging.DEBUG)
+
+fmtstr = '%(asctime)s - %(name)s - %(levelname)s - %(funcName)s - %(message)s'
+fmtdate = '%H:%M:%S'
+formatter = logging.Formatter(fmtstr, fmtdate)
+
+fh.setFormatter(formatter)
+ch.setFormatter(formatter)
+
+logger.addHandler(fh)
+logger.addHandler(ch)
 
 
 def create_arg_parser():
@@ -47,7 +68,7 @@ def parse_tululu_category(category_url, start_page_id, end_page_id):
     page_id = start_page_id
     
     while True:
-        print(page_id)
+        logger.info(f'parsing page: {page_id}')
         list_page_url = f'{category_url}{page_id}/'
         response = requests.get(list_page_url)
         response.raise_for_status()
@@ -65,6 +86,8 @@ def parse_tululu_category(category_url, start_page_id, end_page_id):
 
 
 def main():
+    logger.info('Starting program')
+    
     urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
     parser = create_arg_parser()
     args = parser.parse_args()
@@ -80,7 +103,6 @@ def main():
     category_url = 'https://tululu.org/l55/'
 
     title_page_urls = parse_tululu_category(category_url, start_page_id, end_page_id)
-    print(args)
     books_summary = download_books(title_page_urls)
     
     with open('books.json', 'w', encoding='utf-8') as json_file:

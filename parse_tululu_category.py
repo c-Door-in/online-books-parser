@@ -95,7 +95,7 @@ def parse_tululu_category(category_url, start_page_id, end_page_id):
 
 def main():
     logger.setLevel(logging.DEBUG)
-    
+
     fh = logging.FileHandler('spam.log')
     fh.setLevel(logging.DEBUG)
     ch = logging.StreamHandler()
@@ -114,26 +114,26 @@ def main():
     urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
     parser = create_arg_parser()
     args = parser.parse_args()
-    dest_folder = args.dest_folder
-    skip_imgs = args.skip_imgs
-    skip_txt = args.skip_txt
-    json_path = args.json_path
-    start_page_id, end_page_id = args.start_page, args.end_page
 
-    if end_page_id:
-        try:
-            if start_page_id > end_page_id:
-                raise Exception('Start page number must be less than the end one')
-        except Exception:
-            raise
+    if args.end_page and args.start_page > args.end_page:
+        raise Exception('Start page number must be less than the end one')
     
     category_url = 'https://tululu.org/l55/'
 
-    Path(dest_folder).mkdir(parents=True, exist_ok=True)
-    title_page_urls = parse_tululu_category(category_url, start_page_id, end_page_id)
-    books_summary = download_books(title_page_urls, dest_folder, skip_imgs, skip_txt)
+    Path(args.dest_folder).mkdir(parents=True, exist_ok=True)
+    title_page_urls = parse_tululu_category(
+        category_url,
+        args.start_page,
+        args.end_page,
+    )
+    books_summary = download_books(
+        title_page_urls,
+        args.dest_folder,
+        args.skip_imgs,
+        args.skip_txt,
+    )
     
-    with open(f'{dest_folder}/{json_path}.json', 'w', encoding='utf-8') as json_file:
+    with open(f'{args.dest_folder}/{args.json_path}.json', 'w', encoding='utf-8') as json_file:
         json.dump(books_summary, json_file, ensure_ascii=False)
 
 

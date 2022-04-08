@@ -60,9 +60,8 @@ def create_arg_parser():
 
 
 def is_final_page(soup, page_id):
-    selector = '#content .npage'
     return str(page_id) not in [
-        npage.text for npage in soup.select(selector)
+        npage.text for npage in soup.select('#content .npage')
     ]
 
 
@@ -80,10 +79,7 @@ def parse_tululu_category(category_url, start_page_id, end_page_id):
         for book_url in [url.select_one('[href^="/b"]')['href'] for url in card_tags]:
             book_urls.extend([urljoin(category_url, book_url)])
         page_id += 1
-        if end_page_id:
-            if page_id > end_page_id:
-                break
-        if is_final_page(soup, page_id):
+        if (end_page_id and page_id > end_page_id) or is_final_page(soup, page_id):
             break
         
     return book_urls

@@ -12,23 +12,6 @@ from download_books import download_books
 
 
 logger = logging.getLogger('log')
-logger.setLevel(logging.DEBUG)
-
-fh = logging.FileHandler('spam.log')
-fh.setLevel(logging.DEBUG)
-
-ch = logging.StreamHandler()
-ch.setLevel(logging.DEBUG)
-
-fmtstr = '%(asctime)s - %(name)s - %(levelname)s - %(funcName)s - %(message)s'
-fmtdate = '%H:%M:%S'
-formatter = logging.Formatter(fmtstr, fmtdate)
-
-fh.setFormatter(formatter)
-ch.setFormatter(formatter)
-
-logger.addHandler(fh)
-logger.addHandler(ch)
 
 
 def create_arg_parser():
@@ -111,6 +94,21 @@ def parse_tululu_category(category_url, start_page_id, end_page_id):
 
 
 def main():
+    logger.setLevel(logging.DEBUG)
+    
+    fh = logging.FileHandler('spam.log')
+    fh.setLevel(logging.DEBUG)
+    ch = logging.StreamHandler()
+    ch.setLevel(logging.DEBUG)
+    fmtstr = '%(asctime)s - %(name)s - %(levelname)s - %(funcName)s - %(message)s'
+    fmtdate = '%H:%M:%S'
+    formatter = logging.Formatter(fmtstr, fmtdate)
+    fh.setFormatter(formatter)
+    ch.setFormatter(formatter)
+
+    logger.addHandler(fh)
+    logger.addHandler(ch)
+
     logger.info('Starting program')
     
     urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)

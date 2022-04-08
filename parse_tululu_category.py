@@ -66,11 +66,6 @@ def is_final_page(soup, page_id):
     ]
 
 
-def parse_book_urls(soup):
-    card_tags = soup.select('.d_book')
-    return [book_url.select_one('[href^="/b"]')['href'] for book_url in card_tags]
-
-
 def parse_tululu_category(category_url, start_page_id, end_page_id):
     book_urls = list()
     page_id = start_page_id
@@ -81,7 +76,8 @@ def parse_tululu_category(category_url, start_page_id, end_page_id):
         response = requests.get(list_page_url)
         response.raise_for_status()
         soup = BeautifulSoup(response.text, 'lxml')
-        for book_url in parse_book_urls(soup):
+        card_tags = soup.select('.d_book')
+        for book_url in [url.select_one('[href^="/b"]')['href'] for url in card_tags]:
             book_urls.extend([urljoin(category_url, book_url)])
         page_id += 1
         if end_page_id:

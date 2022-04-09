@@ -59,29 +59,32 @@ def create_arg_parser():
     return parser
 
 
-def is_final_page(soup, page_id):
-    return str(page_id) not in [
-        npage.text for npage in soup.select('#content .npage')
-    ]
+def check_final_npage(category_url, end_page):
+    response = requests.get(category_url)
+    response.raise_for_status()
+    soup = BeautifulSoup(response.text, 'lxml')
+    final_page_number = int(soup.select('#content .npage')[-1].text)
+    if not end_page:
+        return final_page_number
+    if end_page > final_page_number:
+        raise Exception(
+            f'There are only {final_page_number} pages in the category list. ' \
+            f'Enter correct end page number.'
+    )
+    return end_page
 
 
-def parse_tululu_category(category_url, start_page_id, end_page_id):
+def parse_tululu_category(category_url, start_page, end_page):
     book_urls = list()
-    page_id = start_page_id
-    
-    while True:
-        logger.info(f'parsing page: {page_id}')
-        list_page_url = f'{category_url}{page_id}/'
+    for page_number in range(start_page, end_page+1):
+        logger.info(f'parsing page: {page_number}')
+        list_page_url = f'{category_url}{page_number}/'
         response = requests.get(list_page_url)
         response.raise_for_status()
         soup = BeautifulSoup(response.text, 'lxml')
         card_tags = soup.select('.d_book')
         for book_url in [url.select_one('[href^="/b"]')['href'] for url in card_tags]:
             book_urls.extend([urljoin(category_url, book_url)])
-        page_id += 1
-        if (end_page_id and page_id > end_page_id) or is_final_page(soup, page_id):
-            break
-        
     return book_urls
 
 
@@ -106,17 +109,17 @@ def main():
     urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
     parser = create_arg_parser()
     args = parser.parse_args()
-
-    if args.end_page and args.start_page > args.end_page:
+    if args.end_page and args.end_page < args.start_page:
         raise Exception('Start page number must be less than the end one')
-    
+
     category_url = 'https://tululu.org/l55/'
+    end_page = check_final_npage(category_url, args.end_page)
 
     Path(args.dest_folder).mkdir(parents=True, exist_ok=True)
     title_page_urls = parse_tululu_category(
         category_url,
         args.start_page,
-        args.end_page,
+        end_page,
     )
     books_summary = download_books(
         title_page_urls,

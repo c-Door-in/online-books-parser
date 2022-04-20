@@ -11,12 +11,7 @@ from parse_book_page import parse_book_page
 
 module_logger = logging.getLogger('log.download_books')
 
-def get_txt_filepath(folder, title, id):
-    filename = sanitize_filename(f'{id}. {title}.txt')
-    return os.path.join(folder, filename)
-
-
-def download_txt(title_url, txt_url, id, title, dest_folder):
+def download_txt(title_url, txt_url, book_id, title, dest_folder):
     url = urljoin(title_url, txt_url)
     module_logger.debug(url)
     response = requests.get(url)
@@ -24,7 +19,8 @@ def download_txt(title_url, txt_url, id, title, dest_folder):
 
     folder = f'{dest_folder}/books/'
     Path(folder).mkdir(parents=True, exist_ok=True)
-    filepath = get_txt_filepath(folder, title, id)
+    filename = sanitize_filename(f'{book_id}-я книга. {title}.txt')
+    filepath = os.path.join(folder, filename)
     with open(filepath, 'w', encoding='utf-8') as file:
         file.write(response.text)
     return filepath
@@ -50,34 +46,41 @@ def download_book(book_id, title_page_url, dest_folder, skip_imgs, skip_txt):
     response.raise_for_status()
     if response.history:
         raise requests.HTTPError
-    module_logger.info(f'{book_id} {title_page_url}')
     parsed_page = parse_book_page(response.text)
-
-    title = parsed_page['title']
-    txt_url = parsed_page['txt_url']
-    image_url = parsed_page['image_url']
-    if not txt_url:
+    if not parsed_page['txt_url']:
         return
-    if not skip_txt:
-        download_txt(title_page_url, txt_url, book_id, title, dest_folder)
-    if not skip_imgs:
-        download_image(title_page_url, image_url, dest_folder)
-    return parsed_page
+    txtpath = download_txt(title_page_url,
+                            parsed_page['txt_url'],
+                            book_id,
+                            parsed_page['title'],
+                            dest_folder) if not skip_txt else None
+    imagepath = download_image(title_page_url,
+                               parsed_page['image_url'],
+                               dest_folder) if not skip_imgs else None
+    return {
+        'title': parsed_page['title'],
+        'author': parsed_page['author'],
+        'txtpath': txtpath,
+        'imagepath': imagepath,
+        'genres': parsed_page['genres'],
+        'comments': parsed_page['comments'],
+    }
 
 
 def download_books(title_page_urls, dest_folder, skip_imgs, skip_txt):
     books_summary = []
     for book_id, page_url in enumerate(title_page_urls, 1):
+        module_logger.info(f'{book_id} {page_url}')
         try:
-            parsed_page = download_book(
+            download_result = download_book(
                 book_id,
                 page_url,
                 dest_folder,
                 skip_imgs,
                 skip_txt,
             )
-            if parsed_page:
-                books_summary.append(parsed_page)
+            if download_result:
+                books_summary.append(download_result)
         except requests.HTTPError:
             continue
     return books_summary

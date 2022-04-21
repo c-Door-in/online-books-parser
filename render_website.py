@@ -1,7 +1,6 @@
 import json
-from http.server import HTTPServer, SimpleHTTPRequestHandler
-from pprint import pprint
-from urllib.parse import quote, urlencode, urljoin
+from pathlib import Path
+from urllib.parse import quote
 
 from jinja2 import Environment, FileSystemLoader, select_autoescape
 from livereload import Server
@@ -15,9 +14,6 @@ def get_index_template():
     )
     return env.get_template('template.html')
 
-# server = HTTPServer(('0.0.0.0', 8000), SimpleHTTPRequestHandler)
-# server.serve_forever()
-
 
 def main():
     with open('./parsing_result/books.json', 'r', encoding='utf8') as file:
@@ -26,15 +22,18 @@ def main():
     for book in books:
         book['imagepath'] = quote(book['imagepath'])
         book['txtpath'] = quote(book['txtpath'])
-    
-    books_pairs = list(chunked(books, 2))
+
+    paged_books = list(chunked(books, 20))
+    Path('pages').mkdir(parents=True, exist_ok=True)
     
     def on_reload():
-        rendered_page = get_index_template().render(
-            books_pairs = books_pairs
-        )
-        with open('index.html', 'w', encoding='utf8') as file:
-            file.write(rendered_page)
+        for page_num, page_books in enumerate(paged_books):
+            books_pairs = list(chunked(page_books, 2))
+            rendered_page = get_index_template().render(
+                books_pairs = books_pairs
+            )
+            with open(f'pages/index{page_num}.html', 'w', encoding='utf8') as file:
+                file.write(rendered_page)
         print('Site rebuilt')
     on_reload()
     server = Server()

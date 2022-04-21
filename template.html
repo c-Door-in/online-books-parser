@@ -12,7 +12,7 @@
   </head>
   <body>
     <div class="container">
-      <div class="row mb-3">
+      <div class="row mt-4 ml-0">
         <nav aria-label="Books page navigation">
           <ul class="pagination">
             {% if current_page_num == pages_amount|first %}
@@ -37,8 +37,6 @@
           </ul>
         </nav>
       </div>
-    </div>
-    <div class="container">
       <div class="row">
         {% for pair in books_pairs %}
           {% for book in pair %}
@@ -52,6 +50,11 @@
                     <div class="card-body">
                       <h5 class="card-title">{{ book.title }}</h5>
                       <p class="card-text">{{ book.author }}</p>
+                      <p>
+                        {% for genre in book.genres %}
+                          <span class="badge light-badge">{{ genre }}</span>
+                        {% endfor %}
+                      </p>
                       <a href="../{{ book.txtpath }}" target="_blank">читать</a>
                     </div>
                   </div>

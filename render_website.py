@@ -23,14 +23,18 @@ def main():
         book['imagepath'] = quote(book['imagepath'])
         book['txtpath'] = quote(book['txtpath'])
 
-    paged_books = list(chunked(books, 20))
+    books_on_page = 20
+    paged_books = list(chunked(books, books_on_page))
+    pages_amount = range(1, len(paged_books)+1)
     Path('pages').mkdir(parents=True, exist_ok=True)
     
     def on_reload():
-        for page_num, page_books in enumerate(paged_books):
+        for page_num, page_books in enumerate(paged_books, 1):
             books_pairs = list(chunked(page_books, 2))
             rendered_page = get_index_template().render(
-                books_pairs = books_pairs
+                books_pairs = books_pairs,
+                pages_amount = pages_amount,
+                current_page_num = page_num,
             )
             with open(f'pages/index{page_num}.html', 'w', encoding='utf8') as file:
                 file.write(rendered_page)

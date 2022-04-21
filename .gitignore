@@ -155,5 +155,6 @@ cython_debug/
 test*
 books/
 images/
+pages/
 books.json
 index.html

@@ -12,6 +12,33 @@
   </head>
   <body>
     <div class="container">
+      <div class="row mb-3">
+        <nav aria-label="Books page navigation">
+          <ul class="pagination">
+            {% if current_page_num == pages_amount|first %}
+              <li class="page-item disabled"><span class="page-link">Назад<span></li>
+            {% else %}
+              <li class="page-item"><a class="page-link" href="index{{ current_page_num - 1 }}.html">Назад</a></li>
+            {% endif %}
+            {% for page_num in pages_amount %}
+              {% if page_num == current_page_num %}
+                <li class="page-item active">
+                  <span class="page-link">{{ current_page_num }}</span>
+                </li>
+              {% else %}
+                <li class="page-item"><a class="page-link" href="index{{ page_num }}.html">{{ page_num }}</a></li>
+              {% endif %}
+            {% endfor %}
+            {% if current_page_num == pages_amount|last %}
+              <li class="page-item disabled"><span class="page-link">Вперёд<span></li>
+            {% else %}
+              <li class="page-item"><a class="page-link" href="index{{ current_page_num + 1 }}.html">Вперёд</a></li>
+            {% endif %}
+          </ul>
+        </nav>
+      </div>
+    </div>
+    <div class="container">
       <div class="row">
         {% for pair in books_pairs %}
           {% for book in pair %}

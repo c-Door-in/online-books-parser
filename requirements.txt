@@ -2,6 +2,7 @@ BeautifulSoup4==4.10.*
 Jinja2==3.1.*
 livereload==2.6.3
 lxml==4.8.*
+more-itertools==8.12.*
 pathvalidate==2.5.*
 requests==2.27.*
 urllib3==1.26.9

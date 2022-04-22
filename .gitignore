@@ -153,4 +153,8 @@ cython_debug/
 
 # work files
 test*
+books/
+images/
+pages/
 books.json
+index.html

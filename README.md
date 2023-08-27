@@ -46,4 +46,4 @@ python parse_tululu_category.py -from 1 -to 100 -f result -i -t -j books
 
 ### Цель проекта
 
-Код написан в образовательных целях на онлайн-курсе для веб-разработчиков [dvmn.org](https://dvmn.org/).
+Код написан для портала Devman [dvmn.org](https://dvmn.org/).
